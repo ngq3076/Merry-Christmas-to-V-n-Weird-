@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magic Christmas - Thumb Snow</title>
+    <title>Magic Christmas - Peace Snow</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
@@ -54,12 +54,12 @@
 <body>
     <div id="ui-layer">
         <div class="guide">
-            👍 <b>Ngón Cái:</b> Hóa Tuyết &nbsp;|&nbsp; 🖐 <b>Mở tay:</b> Xoay 3D &nbsp;|&nbsp; 🫶 <b>Tim:</b> Love &nbsp;|&nbsp; ✊ <b>Nắm:</b> Cây thông &nbsp;|&nbsp; 👌 <b>Chụm:</b> Xem ảnh
+            ✌️ <b>2 Ngón:</b> Hóa Tuyết &nbsp;|&nbsp; 🖐 <b>Mở tay:</b> Xoay 3D &nbsp;|&nbsp; 🫶 <b>Tim:</b> Love &nbsp;|&nbsp; ✊ <b>Nắm:</b> Cây thông &nbsp;|&nbsp; 👌 <b>Chụm:</b> Xem ảnh
         </div>
         <button id="btnStart" onclick="startSystem()">START MAGIC</button>
     </div>
 
-    <div id="copyright">© by vandiep (Thumb Update)</div>
+    <div id="copyright">© by vandiep (Victory Edition)</div>
 
     <div id="canvas-container"></div>
     <video class="input_video" style="display:none"></video>
@@ -316,7 +316,6 @@
             const baseColor = group.geometry.userData.baseColor;
             const baseSize = group.geometry.userData.baseSize;
             
-            // Xử lý riêng cho TUYẾT (SNOW)
             if (type === 'snow') {
                 if (targetState === 'SNOW') {
                     for(let i=0; i<positions.length; i+=3) {
@@ -352,7 +351,7 @@
                 for(let i=0; i<count; i++) {
                     sizes[i] = baseSize;
                     if (isSnowMode) {
-                        colors[i*3] = 1.0; colors[i*3+1] = 1.0; colors[i*3+2] = 1.0; // Hóa trắng
+                        colors[i*3] = 1.0; colors[i*3+1] = 1.0; colors[i*3+2] = 1.0; 
                     } else {
                         let b = 1.0;
                         if(type === 'red') b = 0.5 + 0.5 * Math.sin(time * 3 + phases[i]);
@@ -488,37 +487,30 @@
                     handX = lm[9].x; handY = lm[9].y; 
                     const wrist = lm[0];
                     
-                    // Khoảng cách từ cổ tay tới các đầu ngón
-                    const dThumb = Math.hypot(lm[4].x-wrist.x, lm[4].y-wrist.y);
                     const dIndex = Math.hypot(lm[8].x-wrist.x, lm[8].y-wrist.y);
                     const dMiddle = Math.hypot(lm[12].x-wrist.x, lm[12].y-wrist.y);
                     const dRing = Math.hypot(lm[16].x-wrist.x, lm[16].y-wrist.y);
                     const dPinky = Math.hypot(lm[20].x-wrist.x, lm[20].y-wrist.y);
-
-                    // Tính trung bình 4 ngón (trừ ngón cái)
-                    const avgDist = (dIndex + dMiddle + dRing + dPinky) / 4;
+                    
+                    const tips = [8,12,16,20];
+                    let openDist = 0; tips.forEach(i => openDist += Math.hypot(lm[i].x-wrist.x, lm[i].y-wrist.y));
+                    const avgDist = openDist / 4;
                     const pinchDist = Math.hypot(lm[4].x-lm[8].x, lm[4].y-lm[8].y);
 
-                    // ============================================
-                    // LOGIC NHẬN DIỆN MỚI
-                    // ============================================
-
-                    // 1. Check THUMB UP (Ngón cái) trước
-                    // Điều kiện: Ngón cái duỗi (xa cổ tay), Ngón trỏ cuộn (gần cổ tay), Ngón út cuộn
-                    // Ngón cái phải cách cổ tay > 0.3, trong khi các ngón kia < 0.3
-                    if (dThumb > 0.3 && dIndex < 0.25 && dPinky < 0.25) {
+                    // --- GESTURE LOGIC: VICTORY / 2 FINGERS (Snow) ---
+                    // Index & Middle Open (> 0.3) AND Ring & Pinky Closed (< 0.25)
+                    if (dIndex > 0.3 && dMiddle > 0.3 && dRing < 0.25 && dPinky < 0.25) {
                         state = 'SNOW';
                     } 
-                    // 2. Check FIST (Nắm đấm / Cây thông)
-                    // Điều kiện: Cả 4 ngón đều cuộn vào
+                    // FIST (Tree)
                     else if (avgDist < 0.25) { 
                         state = 'TREE'; 
                     } 
-                    // 3. Check PINCH (Chụm ngón tay / Xem ảnh)
+                    // PINCH (Photo)
                     else if (pinchDist < 0.05) { 
                         state = 'PHOTO'; 
                     } 
-                    // 4. Default: OPEN HAND (Xoay 3D)
+                    // OPEN HAND (Explode)
                     else { 
                         state = 'EXPLODE'; 
                     }
