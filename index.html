@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>Magic Christmas - Optimized Mobile</title>
+    <title>Magic Christmas - Mobile Perfection</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
@@ -11,7 +11,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
     <style>
-
         body { 
             margin: 0; overflow: hidden; background-color: #000000; 
             font-family: 'Segoe UI', sans-serif; 
@@ -37,7 +36,7 @@
         @media (max-width: 600px) {
             .guide { font-size: 11px; margin-bottom: 15px; }
             button { padding: 10px 25px; font-size: 14px; }
-            /* Camera preview nhỏ gọn hơn trên mobile */
+            /* Camera nhỏ hơn chút để đỡ che màn hình */
             #camera-preview { width: 80px; height: 60px; top: 10px; right: 10px; }
         }
 
@@ -58,44 +57,53 @@
             width: 120px; height: 90px;
             border: 2px solid rgba(255, 215, 0, 0.5); 
             transform: scaleX(-1); opacity: 0.8; border-radius: 8px;
-            object-fit: cover;
+            object-fit: cover; /* Quan trọng: Cắt ảnh để vừa khung */
             background-color: black;
         }
         
-        
+        #copyright {
+            position: absolute; bottom: 5px; right: 10px;
+            color: rgba(255, 255, 255, 0.3); font-size: 10px;
+            z-index: 100; font-family: sans-serif; pointer-events: none; font-style: italic;
+        }
     </style>
 </head>
 <body>
     <div id="ui-layer">
         <div class="guide">
-            ✌️ <b>Hi:</b> Theme Tuyết &nbsp;|&nbsp; 🤟 <b>3 </b> Theme chill <br>
-            🖐 <b>Mở:</b> Xoay 360 &nbsp;|&nbsp; ✊ <b>Nắm:</b> Cây thông &nbsp;|&nbsp; 👌 <b>Chụm:</b> Xem ảnh
+            ✌️ <b>2 Ngón:</b> Bật Tuyết &nbsp;|&nbsp; 🤟 <b>3 Ngón:</b> Tắt Tuyết <br>
+            🖐 <b>Mở:</b> Xoay &nbsp;|&nbsp; ✊ <b>Nắm:</b> Cây thông &nbsp;|&nbsp; 👌 <b>Chụm:</b> Xem ảnh
         </div>
-        <button id="btnStart" onclick="startSystem()">-> START <-</button>
+        <button id="btnStart" onclick="startSystem()">START MAGIC</button>
     </div>
+
+    <div id="copyright">© by vandiep (Mobile Perfect)</div>
 
     <div id="canvas-container"></div>
     <video class="input_video" style="display:none" playsinline></video>
     <canvas id="camera-preview"></canvas>
 
     <script>
- 
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
-
         const CONFIG = {
             audioUrl: "./audio.mp3",
             particles: { 
-
-                gold: isMobile ? 500 : 1200, 
-                red: isMobile ? 80 : 250, 
-                gift: isMobile ? 150 : 200 
+                gold: isMobile ? 1200 : 2000, 
+                red: isMobile ? 200 : 300, 
+                gift: isMobile ? 100 : 150 
             },
-
-            baseRadius: isMobile ? 35 : 45, 
-            tree: { height: isMobile ? 60 : 70, radius: isMobile ? 25 : 35 },
+            // MOBILE ADJUSTMENT: Tăng bán kính và chiều cao cây trên mobile để lấp đầy màn hình dọc
+            baseRadius: isMobile ? 55 : 45, 
+            tree: { 
+                height: isMobile ? 90 : 70, 
+                radius: isMobile ? 45 : 35 
+            },
             photos: [
-                './1.jpg', './2.jpg', './3.jpg', './4.jpg', './5.jpg', './6.jpg', './7.jpg', './10.jpg', './11.jpg', './12.jpg', './13.jpg', './14.jpg', './15.jpg', './16.jpg', './19.jpg', './20.jpg' 
+                './image1.jpeg', './image2.jpeg', './image3.jpeg', './image4.jpeg', './image5.jpeg',
+                'https://picsum.photos/id/1011/500/500', 'https://picsum.photos/id/1012/500/500',
+                'https://picsum.photos/id/1013/500/500', 'https://picsum.photos/id/1014/500/500',
+                'https://picsum.photos/id/1015/500/500'
             ]
         };
 
@@ -122,6 +130,9 @@
 
         CONFIG.photos.forEach((f, i) => { photoTextures[i] = loader.load(f); });
 
+        // ===========================================
+        // TEXTURE GENERATOR
+        // ===========================================
         function createCustomTexture(type) {
             const canvas = document.createElement('canvas');
             canvas.width = 128; canvas.height = 128;
@@ -129,8 +140,7 @@
             const cx = 64, cy = 64;
 
             if (type === 'white_glow') {
-               
-                const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, 50); 
+                const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, 45); 
                 grd.addColorStop(0, '#FFFFFF'); 
                 grd.addColorStop(0.4, 'rgba(255, 255, 255, 0.9)'); 
                 grd.addColorStop(1, 'rgba(255, 255, 255, 0)');
@@ -164,22 +174,23 @@
             scene = new THREE.Scene();
             scene.fog = new THREE.FogExp2(0x000000, 0.002);
 
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
+            // Tăng FOV trên mobile một chút để nhìn rộng hơn
+            const fov = isMobile ? 75 : 60;
+            camera = new THREE.PerspectiveCamera(fov, window.innerWidth/window.innerHeight, 0.1, 1000);
             
-            // TỐI ƯU RENDERER CHO MOBILE
             renderer = new THREE.WebGLRenderer({ 
                 antialias: !isMobile, 
                 alpha: false,
                 powerPreference: "high-performance"
             });
             renderer.setSize(window.innerWidth, window.innerHeight);
-
             renderer.setPixelRatio(isMobile ? 1.5 : Math.min(window.devicePixelRatio, 2)); 
             container.appendChild(renderer.domElement);
 
             updateCameraPosition();
 
-            const sizeMod = isMobile ? 1.5 : 1.0;
+            // Mobile hạt to hơn chút
+            const sizeMod = isMobile ? 1.8 : 1.0;
 
             groupGold = createParticleSystem('gold', CONFIG.particles.gold, 2.0 * sizeMod);
             groupRed = createParticleSystem('red', CONFIG.particles.red, 3.5 * sizeMod); 
@@ -190,10 +201,10 @@
             animate();
         }
 
- 
         function updateCameraPosition() {
-
-            const paddingMultiplier = isMobile ? 1.8 : 1.4; 
+            // MOBILE ADJUSTMENT: Zoom out camera trên mobile để vừa khung hình dọc
+            // Tăng multiplier nếu vẫn thấy to
+            const paddingMultiplier = isMobile ? 2.2 : 1.4; 
             const targetSize = CONFIG.baseRadius * paddingMultiplier; 
             
             const fovRad = (camera.fov * Math.PI) / 180;
@@ -201,7 +212,6 @@
             const aspect = window.innerWidth / window.innerHeight;
             const distHorizontal = Math.abs(targetSize / (Math.sin(fovRad / 2) * aspect));
             
-
             const finalDist = Math.max(distVertical, distHorizontal);
             camera.position.z = finalDist;
         }
@@ -232,7 +242,7 @@
                 let hy = 13 * Math.cos(tHeart) - 5 * Math.cos(2*tHeart) - 2 * Math.cos(3*tHeart) - Math.cos(4*tHeart);
                 const rFill = Math.pow(Math.random(), 0.3); hx *= rFill; hy *= rFill;
                 let hz = (Math.random() - 0.5) * 8 * rFill; 
-                const scaleH = isMobile ? 1.8 : 2.2; 
+                const scaleH = isMobile ? 1.5 : 2.2; 
                 pHeartTargets.push(hx * scaleH, hy * scaleH + 5, hz); 
 
                 pPositions.push(pTreeTargets[i*3], pTreeTargets[i*3+1], pTreeTargets[i*3+2]);
@@ -304,8 +314,8 @@
 
         function createDecorations() {
             // Chữ nhỏ hơn trên mobile
-            const fontSize = isMobile ? '60px' : '90px';
-            const loveSize = isMobile ? '80px' : '120px';
+            const fontSize = isMobile ? '50px' : '90px';
+            const loveSize = isMobile ? '70px' : '120px';
 
             const canvas = document.createElement('canvas'); canvas.width = 1024; canvas.height = 256;
             const ctx = canvas.getContext('2d');
@@ -348,7 +358,6 @@
             const phases = group.geometry.userData.phases;
             const baseSize = group.geometry.userData.baseSize;
             
-            // Texture Swap
             if (type === 'gift') {
                 if (isSnowTheme) {
                     if (group.material.map !== particleTextures.snow) {
@@ -383,10 +392,8 @@
                 group.scale.set(bs, bs, bs);
             }
 
-            // COLOR LOGIC
             if (isSnowTheme) currentSnowFactor += 0.02; 
             else currentSnowFactor -= 0.02;
-            
             if (currentSnowFactor > 1) currentSnowFactor = 1;
             if (currentSnowFactor < 0) currentSnowFactor = 0;
 
@@ -394,7 +401,6 @@
                 sizes[i] = baseSize;
                 let tr, tg, tb, tSize = baseSize;
 
-                // 1. MÀU GỐC
                 let rNormal, gNormal, bNormal;
                 let b = 1.0;
                 if (targetState !== 'TREE') b = 0.8 + 0.5 * Math.sin(time * 12 + phases[i]);
@@ -407,18 +413,14 @@
                 else if (type === 'red') { rNormal = 1.0 * b; gNormal = 0.0; bNormal = 0.0; } 
                 else { rNormal = 1.0 * b; gNormal = 1.0 * b; bNormal = 1.0 * b; } 
 
-                // 2. MÀU TUYẾT (SIÊU SÁNG)
                 let rSnow, gSnow, bSnow;
                 const twinkle = 1.0 + 0.5 * Math.sin(time * 8 + phases[i]);
                 if (type === 'red') {
-                    const br = 1.35 * twinkle;
-                    rSnow = br; gSnow = br; bSnow = br; 
+                    const br = 1.5 * twinkle; rSnow = br; gSnow = br; bSnow = br; 
                 } else if (type === 'gold') {
-                    const br = 1.05 * twinkle; 
-                    rSnow = 0.9 * br; gSnow = 0.9 * br; bSnow = 1.0 * br;
+                    const br = 1.2 * twinkle; rSnow = 0.9 * br; gSnow = 0.9 * br; bSnow = 1.0 * br;
                 } else {
-                    const br = 1.05 * twinkle; 
-                    rSnow = br; gSnow = br; bSnow = br;
+                    const br = 1.2 * twinkle; rSnow = br; gSnow = br; bSnow = br;
                 }
 
                 tr = rNormal * (1 - currentSnowFactor) + rSnow * currentSnowFactor;
@@ -504,8 +506,10 @@
 
                     if (vec.z > maxZ) { maxZ = vec.z; bestIdx = i; }
 
+                    // MOBILE ADJUSTMENT: Cloud scale nhỏ hơn một chút trên mobile
                     let targetScale = 0.15; if (vec.z > (CONFIG.baseRadius - 10)) targetScale = 0.3; 
-                    
+                    if (isMobile) targetScale *= 0.8;
+
                     if (isSnowTheme) mesh.material.color.lerp(new THREE.Color(0xDDEEFF), 0.02);
                     else mesh.material.color.lerp(new THREE.Color(0xFFFFFF), 0.02);
 
@@ -521,7 +525,11 @@
                     if (i === lockedIndex) {
                         const zoomZ = camera.position.z - 40; 
                         mesh.position.lerp(new THREE.Vector3(0, 0, zoomZ), 0.08); 
-                        mesh.scale.lerp(new THREE.Vector3(5, 5, 5), 0.08); 
+                        
+                        // MOBILE ADJUSTMENT: Zoom Scale vừa phải cho mobile
+                        const zoomScale = isMobile ? 2.5 : 5.0;
+                        mesh.scale.lerp(new THREE.Vector3(zoomScale, zoomScale, zoomScale), 0.08); 
+                        
                         mesh.rotation.x += (0 - mesh.rotation.x) * 0.1;
                         mesh.rotation.y += (0 - mesh.rotation.y) * 0.1;
                         mesh.rotation.z += (0 - mesh.rotation.z) * 0.1;
@@ -554,10 +562,32 @@
             });
 
             hands.onResults(results => {
-                canvas.width = 320; 
-                canvas.height = 240;
+                // FIXED CAMERA ASPECT RATIO
+                // Tính toán tỷ lệ để crop hình camera vừa với khung Canvas hiển thị
+                const videoRatio = results.image.width / results.image.height;
+                const canvasRatio = canvas.width / canvas.height;
+                
+                let sw, sh, sx, sy;
+                if (videoRatio > canvasRatio) {
+                    sh = results.image.height;
+                    sw = sh * canvasRatio;
+                    sx = (results.image.width - sw) / 2;
+                    sy = 0;
+                } else {
+                    sw = results.image.width;
+                    sh = sw / canvasRatio;
+                    sx = 0;
+                    sy = (results.image.height - sh) / 2;
+                }
+
+                // Vẽ đúng phần trung tâm của camera, không bị méo hình
+                canvas.width = 320; canvas.height = 240; // Giữ nguyên độ phân giải hiển thị
                 ctx.clearRect(0,0,320,240); 
-                ctx.drawImage(results.image, 0, 0, 320, 240);
+                ctx.save();
+                ctx.scale(-1, 1); // Lật gương
+                ctx.translate(-320, 0);
+                ctx.drawImage(results.image, sx, sy, sw, sh, 0, 0, 320, 240);
+                ctx.restore();
 
                 if (results.multiHandLandmarks.length === 2) {
                     const h1 = results.multiHandLandmarks[0]; const h2 = results.multiHandLandmarks[1];
@@ -599,8 +629,8 @@
 
             const cameraUtils = new Camera(video, {
                 onFrame: async () => { await hands.send({image: video}); }, 
-                width: 320, 
-                height: 240,
+                width: 640, // Lấy độ phân giải cao hơn để crop không bị vỡ
+                height: 480,
                 facingMode: 'user'
             });
             cameraUtils.start();
