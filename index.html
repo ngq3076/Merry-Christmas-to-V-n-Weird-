@@ -90,13 +90,9 @@
                 red: isMobile ? 200 : 300, 
                 gift: isMobile ? 100 : 150 
             },
-            // --- TỐI ƯU KÍCH THƯỚC CHO MOBILE ---
-            // Tăng bán kính đám mây để rộng hơn
             baseRadius: isMobile ? 65 : 45, 
             tree: { 
-                // Tăng chiều cao cây đáng kể để lấp đầy chiều dọc điện thoại
                 height: isMobile ? 120 : 70, 
-                // Tăng bán kính đáy cây
                 radius: isMobile ? 55 : 35 
             },
             photos: [
@@ -121,7 +117,7 @@
         let smoothHandX = 0.5, smoothHandY = 0.5; 
         let curRotX = 0, curRotY = 0;
         
-        let bestCandidateIndex = 0; let lockedIndex = -1;       
+        let bestCandidateIndex = 0; let lockedIndex = -1;        
 
         const dummyLookAt = new THREE.Object3D();
         const loader = new THREE.TextureLoader();
@@ -197,8 +193,6 @@
         }
 
         function updateCameraPosition() {
-            // --- TỐI ƯU CAMERA CHO MOBILE ---
-            // Giảm padding multiplier xuống 1.5 để ép hình to hơn trên mobile
             const paddingMultiplier = isMobile ? 1.5 : 1.4; 
             const targetSize = CONFIG.baseRadius * paddingMultiplier; 
             
@@ -307,8 +301,10 @@
             }
         }
 
+        // ===========================================
+        // FIX: Cập nhật hàm này để sửa vị trí Ngôi sao và Chữ
+        // ===========================================
         function createDecorations() {
-            // Chữ nhỏ hơn trên mobile
             const fontSize = isMobile ? '50px' : '90px';
             const loveSize = isMobile ? '70px' : '120px';
 
@@ -319,7 +315,9 @@
             const tex = new THREE.CanvasTexture(canvas);
             const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, blending: THREE.AdditiveBlending });
             titleMesh = new THREE.Mesh(new THREE.PlaneGeometry(60, 15), mat);
-            titleMesh.position.set(0, 50, 0);
+            
+            // FIX: Đưa chữ lên cao hơn đỉnh cây để không bị cây che khuất trên mobile
+            titleMesh.position.set(0, CONFIG.tree.height / 2 + 25, 0);
             scene.add(titleMesh);
 
             const starCanvas = document.createElement('canvas'); starCanvas.width = 128; starCanvas.height = 128;
@@ -331,7 +329,9 @@
             const starTex = new THREE.CanvasTexture(starCanvas);
             const starMat = new THREE.MeshBasicMaterial({ map: starTex, transparent: true, blending: THREE.AdditiveBlending });
             starMesh = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), starMat);
-            starMesh.position.set(0, CONFIG.tree.height/2 + 2, 0);
+            
+            // FIX: Đặt ngôi sao chính xác vào đỉnh (thụt xuống 1 đơn vị để gắn vào ngọn cây)
+            starMesh.position.set(0, CONFIG.tree.height / 2 - 1, 0);
             scene.add(starMesh);
 
             const loveCanvas = document.createElement('canvas'); loveCanvas.width = 1024; loveCanvas.height = 256;
@@ -424,7 +424,7 @@
 
                 if (targetState === 'HEART' && i % 3 !== 0) tSize = 0;
 
-                colors[i*3]   += (tr - colors[i*3]) * 0.1;
+                colors[i*3]    += (tr - colors[i*3]) * 0.1;
                 colors[i*3+1] += (tg - colors[i*3+1]) * 0.1;
                 colors[i*3+2] += (tb - colors[i*3+2]) * 0.1;
                 sizes[i]      += (tSize - sizes[i]) * 0.1;
@@ -501,9 +501,8 @@
 
                     if (vec.z > maxZ) { maxZ = vec.z; bestIdx = i; }
 
-                    // TĂNG SIZE CLOUD TRÊN MOBILE
                     let targetScale = 0.15; if (vec.z > (CONFIG.baseRadius - 10)) targetScale = 0.3; 
-                    if (isMobile) targetScale *= 1.2; // Tăng 20% kích thước ảnh
+                    if (isMobile) targetScale *= 1.2; 
 
                     if (isSnowTheme) mesh.material.color.lerp(new THREE.Color(0xDDEEFF), 0.02);
                     else mesh.material.color.lerp(new THREE.Color(0xFFFFFF), 0.02);
@@ -521,8 +520,7 @@
                         const zoomZ = camera.position.z - 40; 
                         mesh.position.lerp(new THREE.Vector3(0, 0, zoomZ), 0.08); 
                         
-                        // GIỚI HẠN ZOOM TRÊN MOBILE ĐỂ KHÔNG TRÀN MÀN HÌNH
-                        const zoomScale = isMobile ? 3.0 : 5.0; // Mobile chỉ zoom 3.0
+                        const zoomScale = isMobile ? 3.0 : 5.0; 
                         mesh.scale.lerp(new THREE.Vector3(zoomScale, zoomScale, zoomScale), 0.08); 
                         
                         mesh.rotation.x += (0 - mesh.rotation.x) * 0.1;
@@ -557,7 +555,6 @@
             });
 
             hands.onResults(results => {
-                // CROP VIDEO CAMERA ĐỂ KHÔNG BỊ MÉO HÌNH
                 const videoRatio = results.image.width / results.image.height;
                 const canvasRatio = canvas.width / canvas.height;
                 let sw, sh, sx, sy;
